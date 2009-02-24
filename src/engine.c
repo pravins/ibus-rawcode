@@ -1,7 +1,6 @@
 /* vim:set et sts=4: */
 
 #include <ibus.h>
-#include <hangul.h>
 #include <string.h>
 #include "engine.h"
 #include <glib.h>
@@ -14,7 +13,6 @@ struct _IBusRawcodeEngine {
 	IBusEngine parent;
 
     /* members */
-//    RawcodeInputContext *context;
     GString *buffer;
     gboolean rawcode_mode;
 
@@ -77,9 +75,10 @@ static void ibus_rawcode_engine_flush        (IBusRawcodeEngine       *rawcode);
 static void ibus_rawcode_engine_update_preedit_text
                                             (IBusRawcodeEngine       *rawcode);
 static void ibus_rawcode_engine_process_preedit_text(IBusRawcodeEngine       *rawcode);
-static gunichar get_unicode_value (const GString *preedit);
-static int ascii_to_hex (int ascii);
-static int hex_to_ascii (int hex);
+static gunichar rawcode_get_unicode_value (const GString *preedit);
+static int rawcode_ascii_to_hex (int ascii);
+static int rawcode_hex_to_ascii (int hex);
+int create_rawcode_lookup_table(IBusRawcodeEngine *rawcode);
 
 static IBusEngineClass *parent_class = NULL;
 
@@ -141,7 +140,6 @@ ibus_rawcode_engine_class_init (IBusRawcodeEngineClass *klass)
 static void
 ibus_rawcode_engine_init (IBusRawcodeEngine *rawcode)
 {
-//    rawcode->context = hangul_ic_new ("2");
     rawcode->rawcode_mode = TRUE;
     rawcode->buffer = g_string_new ("");
     rawcode->rawcode_mode_prop = ibus_property_new ("rawcode_mode_prop",
@@ -157,7 +155,7 @@ ibus_rawcode_engine_init (IBusRawcodeEngine *rawcode)
     rawcode->prop_list = ibus_prop_list_new ();
     ibus_prop_list_append (rawcode->prop_list,  rawcode->rawcode_mode_prop);
 
-    rawcode->table = ibus_lookup_table_new (9, 0, TRUE, TRUE);
+    rawcode->table = ibus_lookup_table_new (16, 0, TRUE, FALSE);
 }
 
 static GObject*
@@ -165,13 +163,13 @@ ibus_rawcode_engine_constructor (GType                   type,
                                 guint                   n_construct_params,
                                 GObjectConstructParam  *construct_params)
 {
-    IBusRawcodeEngine *hangul;
+    IBusRawcodeEngine *rawcode;
 
-    hangul = (IBusRawcodeEngine *) G_OBJECT_CLASS (parent_class)->constructor (type,
+    rawcode = (IBusRawcodeEngine *) G_OBJECT_CLASS (parent_class)->constructor (type,
                                                        n_construct_params,
                                                        construct_params);
 
-    return (GObject *)hangul;
+    return (GObject *)rawcode;
 }
 
 
@@ -193,28 +191,28 @@ ibus_rawcode_engine_destroy (IBusRawcodeEngine *rawcode)
         rawcode->table = NULL;
     }
 
-//    if (hangul->context) {
-//        hangul_ic_delete (hangul->context);
-//        hangul->context = NULL;
-//    }
+    if (rawcode->buffer) {
+        g_object_unref (rawcode->buffer);
+        rawcode->buffer = NULL;
+    }
 
 	IBUS_OBJECT_CLASS (parent_class)->destroy ((IBusObject *)rawcode);
 }
 
 static void
-ibus_rawcode_engine_update_preedit_text (IBusRawcodeEngine *hangul)
+ibus_rawcode_engine_update_preedit_text (IBusRawcodeEngine *rawcode)
 {
     IBusText *text;
   const gchar *str;
-str= hangul->buffer->str;
+    str= rawcode->buffer->str;
 
-  g_debug("%s string-> %d lenght", hangul->buffer->str, hangul->buffer->len );
+//  g_debug("%s string-> %d lenght", rawcode->buffer->str, rawcode->buffer->len );
 //		if(hangul->buffer->str!=NULL)
 		if (str != NULL) {
 			        text = ibus_text_new_from_string (str);
 			        ibus_text_append_attribute (text, IBUS_ATTR_TYPE_FOREGROUND, 0x00ffffff, 0, -1);
 			        ibus_text_append_attribute (text, IBUS_ATTR_TYPE_BACKGROUND, 0x00000000, 0, -1);
-			        ibus_engine_update_preedit_text ((IBusEngine *)hangul,
+			        ibus_engine_update_preedit_text ((IBusEngine *)rawcode,
 						                                         text,
 						                                         ibus_text_get_length (text),
 				                                         TRUE);
@@ -222,7 +220,7 @@ str= hangul->buffer->str;
 		}
 	      else {
 		        text = ibus_text_new_from_static_string ("");
-		        ibus_engine_update_preedit_text ((IBusEngine *)hangul, text, 0, FALSE);
+		        ibus_engine_update_preedit_text ((IBusEngine *)rawcode, text, 0, FALSE);
 		        g_object_unref (text);
 		    } 
 // 	g_object_unref (text);
@@ -235,8 +233,6 @@ ibus_rawcode_engine_process_key_event (IBusEngine     *engine,
 {
     IBusRawcodeEngine *rawcode = (IBusRawcodeEngine *) engine;
   const gchar *keyval_name;
-//    gboolean retval;
-//    const gunichar *str;
 
     if (modifiers & IBUS_RELEASE_MASK)
         return FALSE;
@@ -244,38 +240,30 @@ ibus_rawcode_engine_process_key_event (IBusEngine     *engine,
     if (modifiers & (IBUS_CONTROL_MASK | IBUS_MOD1_MASK))
         return FALSE;
 
-    if ((keyval == IBUS_BackSpace) && (rawcode->buffer->len!=0)) {
+    if ((keyval == IBUS_BackSpace) && (modifiers==0) && (rawcode->buffer->len!=0)) {
 	g_string_truncate(rawcode->buffer, (rawcode->buffer->len)-1);
 	ibus_rawcode_engine_update_preedit_text (rawcode);
-//        retval = hangul_ic_backspace (hangul->context);
+	ibus_rawcode_engine_process_preedit_text (rawcode);
         return TRUE;
     }
 
-    if (keyval == IBUS_Escape) {
+    if ((keyval == IBUS_Escape) &&(modifiers==0)) {
 	ibus_rawcode_engine_reset ( engine);
         return TRUE;
     } 
 
-    if ((keyval >= IBUS_0 && keyval <= IBUS_9) || (keyval >= IBUS_A && keyval <= IBUS_F) || (keyval >= IBUS_a && keyval <= IBUS_f)) {
+    if ((keyval >= IBUS_0 && keyval <= IBUS_9) || 
+	(keyval >= IBUS_A && keyval <= IBUS_F) || 
+	(keyval >= IBUS_a && keyval <= IBUS_f)) {
+
+	if(rawcode->buffer->len==0){
+	ibus_engine_show_preedit_text((IBusEngine *)rawcode);
+	}
+
         keyval_name = ibus_keyval_name(keyval);
         g_string_append (rawcode->buffer, keyval_name);
-        g_debug("keyval%x", keyval);
         ibus_rawcode_engine_update_preedit_text (rawcode);
        ibus_rawcode_engine_process_preedit_text(rawcode);
-/*	if(hangul->buffer->len==4){
-//			       gunichar c = get_unicode_value (hangul->buffer);
-//			        g_debug("unicode%x", c);
-//			       IBusText  *text = ibus_text_new_from_unichar(c);
-			        ibus_engine_commit_text ((IBusEngine *)hangul, text);
-			        g_string_assign (hangul->buffer, "");
-			        text = ibus_text_new_from_static_string ("");
-			       ibus_engine_update_preedit_text ((IBusEngine *)hangul, text, 0, FALSE);
-		      	       g_object_unref (text);
-		       	      }
-	else
-
-        return TRUE;
-    } */
    return TRUE;
     }
 
@@ -286,7 +274,6 @@ ibus_rawcode_engine_process_key_event (IBusEngine     *engine,
 static void
 ibus_rawcode_engine_flush (IBusRawcodeEngine *rawcode)
 {
-  //  const gunichar *str;
     IBusText *text;
 
 //    str = hangul_ic_flush (hangul->context);
@@ -327,11 +314,18 @@ ibus_rawcode_engine_toggle_hangul_mode (IBusRawcodeEngine *rawcode)
 static void
 ibus_rawcode_engine_focus_in (IBusEngine *engine)
 {
-    IBusRawcodeEngine *hangul = (IBusRawcodeEngine *) engine;
+    IBusRawcodeEngine *rawcode = (IBusRawcodeEngine *) engine;
 
-    ibus_engine_register_properties (engine, hangul->prop_list);
+    ibus_engine_register_properties (engine, rawcode->prop_list);
 
     parent_class->focus_in (engine);
+  if(rawcode->buffer->len){
+        ibus_rawcode_engine_update_preedit_text (rawcode);
+    if(rawcode->table){
+	ibus_engine_update_lookup_table ((IBusEngine *)rawcode, rawcode->table, TRUE);
+        }
+  }
+  
 }
 
 static void
@@ -351,6 +345,7 @@ ibus_rawcode_engine_reset (IBusEngine *engine)
      g_string_assign (rawcode->buffer, "");
 
     ibus_rawcode_engine_flush (rawcode);
+    ibus_engine_hide_lookup_table((IBusEngine *)rawcode);
     parent_class->reset (engine);
 }
 
@@ -394,15 +389,18 @@ ibus_rawcode_engine_cursor_down (IBusEngine *engine)
 static void
 ibus_rawcode_engine_process_preedit_text (IBusRawcodeEngine *rawcode)
 {
-int MAXLEN = 6;
+  int MAXLEN = 6;
     IBusText *text;
   const gchar *str;
-    gunichar c;
   int i;
 const  GString *lookuptablebuffer;
 lookuptablebuffer = g_string_new("");
    gunichar trail;
     str= rawcode->buffer->str;
+	if(rawcode->buffer->len==0){
+	ibus_engine_hide_preedit_text((IBusEngine *)rawcode);
+	ibus_engine_hide_lookup_table((IBusEngine *)rawcode);
+	}
 
         if (rawcode->buffer->len > 0) {
             if (rawcode->buffer->str[0] == '0')
@@ -413,41 +411,21 @@ lookuptablebuffer = g_string_new("");
                 MAXLEN = 5;
         }
 
-	if(rawcode->buffer->len==3){
-					g_debug("in lenght = 3");
-					ibus_lookup_table_set_page_size (rawcode->table, 16);
-					g_string_append(lookuptablebuffer, rawcode->buffer->str);
-//				               str= rawcode->buffer->str;
-		    for (i=0; i<16; ++i) {
-					trail =(gchar) hex_to_ascii (i);
-					g_debug("trail = %c", trail);
-					g_string_append_c (lookuptablebuffer, trail);		
-					g_debug("buffer %s", lookuptablebuffer->str);
-					g_debug("lookuptable = %s", lookuptablebuffer->str);
-					c = get_unicode_value (lookuptablebuffer);
-	      			        g_debug("unicode vale in 3= %x", c);
-					       text = ibus_text_new_from_unichar(c);			
-	      			         g_debug("Text= %c", text);
-					ibus_lookup_table_append_candidate (rawcode->table, text);
-
-					ibus_engine_update_lookup_table ((IBusEngine *)rawcode, rawcode->table, TRUE);
-//					g_string_append (rawcode->buffer, "");
-//					g_string_append (rawcode->buffer, str);	
-				               g_string_truncate(lookuptablebuffer, lookuptablebuffer->len-1);
-		      	                               g_object_unref (text);
-
-	}
-	}  
-
-	if(rawcode->buffer->len==MAXLEN){
-			       gunichar c = get_unicode_value (rawcode->buffer);
-			        g_debug("unicode value = %x", c);
-			       IBusText  *text = ibus_text_new_from_unichar(c);
+	if((rawcode->buffer->len>=3) && (rawcode->buffer->len < MAXLEN)){
+	create_rawcode_lookup_table(rawcode);
+	}else if(rawcode->buffer->len==MAXLEN){
+			       gunichar c = rawcode_get_unicode_value (rawcode->buffer);
+//			        g_debug("unicode value = %x", c);
+			       text = ibus_text_new_from_unichar(c);
 			        ibus_engine_commit_text ((IBusEngine *)rawcode, text);
 			        g_string_assign (rawcode->buffer, "");
 			        text = ibus_text_new_from_static_string ("");
 			       ibus_engine_update_preedit_text ((IBusEngine *)rawcode, text, 0, FALSE);
-		      	       g_object_unref (text);
+			       if(rawcode->table){
+					       ibus_lookup_table_clear (rawcode->table);
+					       ibus_engine_hide_lookup_table((IBusEngine *)rawcode);
+				}
+
 		       	      }
 
 
@@ -468,24 +446,24 @@ lookuptablebuffer = g_string_new("");
 		        ibus_engine_update_preedit_text ((IBusEngine *)hangul, text, 0, FALSE);
 		        g_object_unref (text);
 		    } 
-// 	g_object_unref (text); */
+ 	g_object_unref (text); */
 }
 
-static gunichar get_unicode_value (const GString *preedit)
+static gunichar rawcode_get_unicode_value (const GString *preedit)
 {
     gunichar code = 0;
 //  g_debug("in get unicode vale\n");
-  g_debug("preedit str in get unicodde value %s\n", preedit->str);
+//  g_debug("preedit str in get unicodde value %s\n", preedit->str);
     int i;
     for (i=0; i<preedit->len; ++i) {
-	g_debug("asciitohex%d",ascii_to_hex ((int) preedit->str[i]));
-        code = (code << 4) | (ascii_to_hex ((int) preedit->str[i]) & 0x0f);
+//	g_debug("asciitohex%d",rawcode_ascii_to_hex ((int) preedit->str[i]));
+        code = (code << 4) | (rawcode_ascii_to_hex ((int) preedit->str[i]) & 0x0f);
     }
-	g_debug("code %x",code );
+//	g_debug("code %x",code );
     return code;
 }
 
-static int ascii_to_hex (int ascii)
+static int rawcode_ascii_to_hex (int ascii)
 {
     if (ascii >= '0' && ascii <= '9')
         return ascii - '0';
@@ -496,15 +474,8 @@ static int ascii_to_hex (int ascii)
     return 0;
 }
 
-static void
-ibus_rawcode_engine_update_lookup_table (IBusRawcodeEngine *rawcode)
-{
-   ibus_lookup_table_clear (rawcode->table);
- 
 
-}
-
-static int hex_to_ascii (int hex)
+static int rawcode_hex_to_ascii (int hex)
 {
     hex %= 16;
 
@@ -512,4 +483,27 @@ static int hex_to_ascii (int hex)
         return hex + '0';
 
     return hex - 10 + 'a';
+}
+
+int create_rawcode_lookup_table(IBusRawcodeEngine *rawcode)
+{
+
+gunichar c, trail;
+int i;
+IBusText *text;
+	if(rawcode->table)
+		ibus_lookup_table_clear (rawcode->table);
+	for (i=0; i<16; ++i) {
+		trail =(gchar) rawcode_hex_to_ascii (i);
+		g_string_append_c (rawcode->buffer, trail);		
+		c = rawcode_get_unicode_value (rawcode->buffer);
+		text = ibus_text_new_from_unichar(c);			
+		ibus_lookup_table_append_candidate (rawcode->table, text);
+		ibus_engine_update_lookup_table ((IBusEngine *)rawcode, rawcode->table, TRUE);
+		g_string_truncate(rawcode->buffer, rawcode->buffer->len-1);
+
+	}  
+		g_object_unref (text);
+		ibus_lookup_table_set_page_size (rawcode->table, rawcode->table->candidates->len);
+return rawcode->table->candidates->len;
 }
