@@ -78,7 +78,8 @@ static void ibus_rawcode_engine_process_preedit_text(IBusRawcodeEngine       *ra
 static gunichar rawcode_get_unicode_value (const GString *preedit);
 static int rawcode_ascii_to_hex (int ascii);
 static int rawcode_hex_to_ascii (int hex);
-int create_rawcode_lookup_table(IBusRawcodeEngine *rawcode);
+static int create_rawcode_lookup_table(IBusRawcodeEngine *rawcode);
+static void commit_buffer_to_ibus(IBusRawcodeEngine *rawcode);
 
 static IBusEngineClass *parent_class = NULL;
 
@@ -267,6 +268,11 @@ ibus_rawcode_engine_process_key_event (IBusEngine     *engine,
    return TRUE;
     }
 
+    if (keyval == IBUS_space && modifiers == 0) {
+	       commit_buffer_to_ibus(rawcode);
+            return TRUE;
+    }
+
     ibus_rawcode_engine_flush (rawcode);
     return FALSE;
 }
@@ -390,13 +396,6 @@ static void
 ibus_rawcode_engine_process_preedit_text (IBusRawcodeEngine *rawcode)
 {
   int MAXLEN = 6;
-    IBusText *text;
-  const gchar *str;
-  int i;
-const  GString *lookuptablebuffer;
-lookuptablebuffer = g_string_new("");
-   gunichar trail;
-    str= rawcode->buffer->str;
 	if(rawcode->buffer->len==0){
 	ibus_engine_hide_preedit_text((IBusEngine *)rawcode);
 	ibus_engine_hide_lookup_table((IBusEngine *)rawcode);
@@ -414,39 +413,9 @@ lookuptablebuffer = g_string_new("");
 	if((rawcode->buffer->len>=3) && (rawcode->buffer->len < MAXLEN)){
 	create_rawcode_lookup_table(rawcode);
 	}else if(rawcode->buffer->len==MAXLEN){
-			       gunichar c = rawcode_get_unicode_value (rawcode->buffer);
-//			        g_debug("unicode value = %x", c);
-			       text = ibus_text_new_from_unichar(c);
-			        ibus_engine_commit_text ((IBusEngine *)rawcode, text);
-			        g_string_assign (rawcode->buffer, "");
-			        text = ibus_text_new_from_static_string ("");
-			       ibus_engine_update_preedit_text ((IBusEngine *)rawcode, text, 0, FALSE);
-			       if(rawcode->table){
-					       ibus_lookup_table_clear (rawcode->table);
-					       ibus_engine_hide_lookup_table((IBusEngine *)rawcode);
-				}
-
+			commit_buffer_to_ibus(rawcode);
 		       	      }
 
-
-/*  g_debug("%s string-> %d lenght", hangul->buffer->str, hangul->buffer->len );
-//		if(hangul->buffer->str!=NULL)
-		if (str != NULL) {
-			        text = ibus_text_new_from_string (str);
-			        ibus_text_append_attribute (text, IBUS_ATTR_TYPE_FOREGROUND, 0x00ffffff, 0, -1);
-			        ibus_text_append_attribute (text, IBUS_ATTR_TYPE_BACKGROUND, 0x00000000, 0, -1);
-			        ibus_engine_update_preedit_text ((IBusEngine *)hangul,
-						                                         text,
-						                                         ibus_text_get_length (text),
-				                                         TRUE);
-		                      g_object_unref (text);
-		}
-	      else {
-		        text = ibus_text_new_from_static_string ("");
-		        ibus_engine_update_preedit_text ((IBusEngine *)hangul, text, 0, FALSE);
-		        g_object_unref (text);
-		    } 
- 	g_object_unref (text); */
 }
 
 static gunichar rawcode_get_unicode_value (const GString *preedit)
@@ -485,7 +454,7 @@ static int rawcode_hex_to_ascii (int hex)
     return hex - 10 + 'a';
 }
 
-int create_rawcode_lookup_table(IBusRawcodeEngine *rawcode)
+static int create_rawcode_lookup_table(IBusRawcodeEngine *rawcode)
 {
 
 gunichar c, trail;
@@ -506,4 +475,21 @@ IBusText *text;
 		g_object_unref (text);
 		ibus_lookup_table_set_page_size (rawcode->table, rawcode->table->candidates->len);
 return rawcode->table->candidates->len;
+}
+
+static void commit_buffer_to_ibus(IBusRawcodeEngine *rawcode)
+{
+  gunichar c;
+   IBusText *text;
+	c = rawcode_get_unicode_value (rawcode->buffer);
+	text = ibus_text_new_from_unichar(c);
+	ibus_engine_commit_text ((IBusEngine *)rawcode, text);
+	g_string_assign (rawcode->buffer, "");
+	text = ibus_text_new_from_static_string ("");
+	ibus_engine_update_preedit_text ((IBusEngine *)rawcode, text, 0, FALSE);
+	if(rawcode->table){
+	ibus_lookup_table_clear (rawcode->table);
+	ibus_engine_hide_lookup_table((IBusEngine *)rawcode);
+	}
+   g_object_unref (text);
 }
