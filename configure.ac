@@ -1,6 +1,6 @@
 # vim:set et ts=4:
 #
-# ibus-hangul - The Hangul engine for IBus
+# ibus-rawcode - The Rawcode engine for IBus
 #
 # Copyright (c) 2007-2008 Huang Peng <shawn.p.huang@gmail.com>
 #
@@ -29,7 +29,7 @@ m4_define(ibus_maybe_datestamp,
 m4_define([ibus_version],
     ibus_major_version.ibus_minor_version.ibus_micro_version[]ibus_maybe_datestamp)
 
-AC_INIT([ibus-hangul], [ibus_version], [http://code.google.com/p/ibus/issues/entry],[ibus-hangul])
+AC_INIT([ibus-rawcode], [ibus_version], [http://code.google.com/p/ibus/issues/entry],[ibus-rawcode])
 AM_INIT_AUTOMAKE([1.10])
 AC_GNU_SOURCE
 
@@ -49,12 +49,9 @@ AC_ISC_POSIX
 AC_HEADER_STDC
 AM_PROG_LIBTOOL
 
-# check libhangul
+# check ibus
 PKG_CHECK_MODULES(IBUS, [
     ibus-1.0
-])
-PKG_CHECK_MODULES(HANGUL, [
-    libhangul
 ])
 
 # check env
@@ -62,7 +59,7 @@ AC_PATH_PROG(ENV, env)
 AC_SUBST(ENV)
 
 # define GETTEXT_* variables
-GETTEXT_PACKAGE=ibus-hangul
+GETTEXT_PACKAGE=ibus-rawcode
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE", [Define to the read-only architecture-independent data directory.])
 
@@ -73,9 +70,9 @@ AM_GNU_GETTEXT_VERSION(0.16.1)
 # OUTPUT files
 AC_CONFIG_FILES([ po/Makefile.in
 Makefile
-ibus-hangul.spec
+ibus-rawcode.spec
 src/Makefile
-src/hangul.xml.in
+src/rawcode.xml.in
 icons/Makefile
 m4/Makefile
 ])

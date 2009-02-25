@@ -1,6 +1,6 @@
 # vim:set noet ts=4:
 #
-# ibus-anthy - The Anthy engine for IBus
+# ibus-rawcode - The Rawcode engine for IBus
 #
 # Copyright (c) 2007-2008 Huang Peng <shawn.p.huang@gmail.com>
 #
@@ -20,12 +20,10 @@
 
 AM_CFLAGS = \
 	@IBUS_CFLAGS@ \
-	@HANGUL_CFLAGS@ \
 	-DPKGDATADIR=\"$(pkgdatadir)\" \
 	$(NULL)
 AM_LDFLAGS = \
 	@IBUS_LIBS@ \
-	@HANGUL_LIBS@ \
 	$(NULL)
 
 check_PROGRAMS = \
@@ -35,37 +33,35 @@ TESTS = \
 	$(check_PROGRAMS) \
 	$(NULL)
 
-libexec_PROGRAMS = ibus-engine-hangul
+libexec_PROGRAMS = ibus-engine-rawcode
 
-ibus_engine_hangul_SOURCES = \
+ibus_engine_rawcode_SOURCES = \
 	main.c \
 	engine.c \
 	engine.h \
 	$(NULL)
-ibus_engine_hangul_CFLAGS = \
+ibus_engine_rawcode_CFLAGS = \
 	@IBUS_CFLAGS@ \
-	@HANGUL_CFLAGS@ \
 	-DPKGDATADIR=\"$(pkgdatadir)\" \
 	$(NULL)
-ibus_engine_hangul_LDFLAGS = \
+ibus_engine_rawcode_LDFLAGS = \
 	@IBUS_LIBS@ \
-	@HANGUL_LIBS@ \
 	$(NULL)
 
 component_DATA = \
-	hangul.xml \
+	rawcode.xml \
 	$(NULL)
 componentdir = @datadir@/ibus/component
 
 EXTRA_DIST = \
-	hangul.xml.in \
+	rawcode.xml.in \
 	$(NULL)
 
 CLEANFILES = \
-	hangul.xml \
+	rawcode.xml \
 	$(NULL)
 
-hangul.xml: hangul.xml.in
+rawcode.xml: rawcode.xml.in
 	( \
 		libexecdir=${libexecdir}; \
 		pkgdatadir=${pkgdatadir}; \
@@ -73,5 +69,5 @@ hangul.xml: hangul.xml.in
 		eval "echo \"$${s}\""; \
 	) > $@
 
-test: ibus-engine-hangul
-	$(builddir)/ibus-engine-hangul
+test: ibus-engine-rawcode
+	$(builddir)/ibus-engine-rawcode

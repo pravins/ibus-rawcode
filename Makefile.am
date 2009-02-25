@@ -1,6 +1,6 @@
 # vim:set noet ts=4:
 #
-# ibus-hangul - The Hangul engine for IBus
+# ibus-rawcode - The Rawcode engine for IBus
 #
 # Copyright (c) 2007-2008 Huang Peng <shawn.p.huang@gmail.com>
 #
@@ -29,7 +29,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 EXTRA_DIST = \
 	autogen.sh \
-	ibus-hangul.spec.in \
+	ibus-rawcode.spec.in \
 	$(NULL)
 
 noinst_DIST = \

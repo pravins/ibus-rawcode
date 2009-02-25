@@ -3,7 +3,6 @@
 #include <ibus.h>
 #include <stdlib.h>
 #include <locale.h>
-#include <hangul.h>
 #include "engine.h"
 
 #define N_(text) text
