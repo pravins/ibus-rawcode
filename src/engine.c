@@ -1,6 +1,7 @@
 /* vim:set et sts=4: */
 
 #include <ibus.h>
+#include <ibusengine.h>
 #include <string.h>
 #include "engine.h"
 #include <glib.h>
@@ -15,6 +16,7 @@ struct _IBusRawcodeEngine {
     /* members */
     GString *buffer;
     gboolean rawcode_mode;
+  int maxpreeditlen;
 
     IBusLookupTable *table;
     IBusProperty    *rawcode_mode_prop;
@@ -73,8 +75,9 @@ static void ibus_hangul_engine_property_hide
 
 static void ibus_rawcode_engine_flush        (IBusRawcodeEngine       *rawcode);
 static void ibus_rawcode_engine_update_preedit_text
-                                            (IBusRawcodeEngine       *rawcode);
-static void ibus_rawcode_engine_process_preedit_text(IBusRawcodeEngine       *rawcode);
+			(IBusRawcodeEngine       *rawcode);
+static void ibus_rawcode_engine_process_preedit_text
+			(IBusRawcodeEngine       *rawcode);
 static gunichar rawcode_get_unicode_value (const GString *preedit);
 static int rawcode_ascii_to_hex (int ascii);
 static int rawcode_hex_to_ascii (int hex);
@@ -157,6 +160,7 @@ ibus_rawcode_engine_init (IBusRawcodeEngine *rawcode)
     ibus_prop_list_append (rawcode->prop_list,  rawcode->rawcode_mode_prop);
 
     rawcode->table = ibus_lookup_table_new (16, 0, TRUE, FALSE);
+  rawcode->maxpreeditlen = 8;
 }
 
 static GObject*
@@ -207,8 +211,6 @@ ibus_rawcode_engine_update_preedit_text (IBusRawcodeEngine *rawcode)
   const gchar *str;
     str= rawcode->buffer->str;
 
-//  g_debug("%s string-> %d lenght", rawcode->buffer->str, rawcode->buffer->len );
-//		if(hangul->buffer->str!=NULL)
 		if (str != NULL) {
 			        text = ibus_text_new_from_string (str);
 			        ibus_text_append_attribute (text, IBUS_ATTR_TYPE_FOREGROUND, 0x00ffffff, 0, -1);
@@ -224,7 +226,6 @@ ibus_rawcode_engine_update_preedit_text (IBusRawcodeEngine *rawcode)
 		        ibus_engine_update_preedit_text ((IBusEngine *)rawcode, text, 0, FALSE);
 		        g_object_unref (text);
 		    } 
-// 	g_object_unref (text);
 }
 
 static gboolean
@@ -253,25 +254,32 @@ ibus_rawcode_engine_process_key_event (IBusEngine     *engine,
         return TRUE;
     } 
 
-    if ((keyval >= IBUS_0 && keyval <= IBUS_9) || 
-	(keyval >= IBUS_A && keyval <= IBUS_F) || 
-	(keyval >= IBUS_a && keyval <= IBUS_f)) {
-
-	if(rawcode->buffer->len==0){
-	ibus_engine_show_preedit_text((IBusEngine *)rawcode);
-	}
-
-        keyval_name = ibus_keyval_name(keyval);
-        g_string_append (rawcode->buffer, keyval_name);
-        ibus_rawcode_engine_update_preedit_text (rawcode);
-       ibus_rawcode_engine_process_preedit_text(rawcode);
-   return TRUE;
-    }
-
     if (keyval == IBUS_space && modifiers == 0) {
 	       commit_buffer_to_ibus(rawcode);
-            return TRUE;
+	       return TRUE;
     }
+
+    if (((keyval >= IBUS_0 && keyval <= IBUS_9) || 
+	(keyval >= IBUS_A && keyval <= IBUS_F) || 
+	(keyval >= IBUS_a && keyval <= IBUS_f)) &&
+	((modifiers == 0) && ( (rawcode->buffer->len)  < (rawcode->maxpreeditlen))) ) {
+
+	if(rawcode->buffer->len==0){
+		ibus_engine_show_preedit_text((IBusEngine *)rawcode);
+	}
+
+	keyval_name = ibus_keyval_name(keyval);
+	g_string_append (rawcode->buffer, keyval_name);
+	ibus_rawcode_engine_update_preedit_text (rawcode);
+	ibus_rawcode_engine_process_preedit_text(rawcode);
+	return TRUE;
+    }
+
+
+
+// other keys will not allowed in preedit
+	if(rawcode->buffer->len>0)
+		return TRUE;
 
     ibus_rawcode_engine_flush (rawcode);
     return FALSE;
@@ -416,19 +424,16 @@ ibus_rawcode_engine_process_preedit_text (IBusRawcodeEngine *rawcode)
 			commit_buffer_to_ibus(rawcode);
 		       	      }
 
+
 }
 
 static gunichar rawcode_get_unicode_value (const GString *preedit)
 {
     gunichar code = 0;
-//  g_debug("in get unicode vale\n");
-//  g_debug("preedit str in get unicodde value %s\n", preedit->str);
     int i;
     for (i=0; i<preedit->len; ++i) {
-//	g_debug("asciitohex%d",rawcode_ascii_to_hex ((int) preedit->str[i]));
         code = (code << 4) | (rawcode_ascii_to_hex ((int) preedit->str[i]) & 0x0f);
     }
-//	g_debug("code %x",code );
     return code;
 }
 
@@ -462,17 +467,31 @@ int i;
 IBusText *text;
 	if(rawcode->table)
 		ibus_lookup_table_clear (rawcode->table);
+// adding space key character in lookuptable
+		c = rawcode_get_unicode_value (rawcode->buffer);
+		if (c >0x0 && c < 0x10FFFF){
+			text = ibus_text_new_from_unichar(c);			
+			ibus_lookup_table_append_candidate (rawcode->table, text);
+			ibus_engine_update_lookup_table ((IBusEngine *)rawcode, rawcode->table, TRUE);
+			}
+
 	for (i=0; i<16; ++i) {
 		trail =(gchar) rawcode_hex_to_ascii (i);
 		g_string_append_c (rawcode->buffer, trail);		
 		c = rawcode_get_unicode_value (rawcode->buffer);
+		if (c >0x0 && c < 0x10FFFF){		
 		text = ibus_text_new_from_unichar(c);			
 		ibus_lookup_table_append_candidate (rawcode->table, text);
 		ibus_engine_update_lookup_table ((IBusEngine *)rawcode, rawcode->table, TRUE);
+		}
 		g_string_truncate(rawcode->buffer, rawcode->buffer->len-1);
 
-	}  
+	}
+//	ibus_engine_hide_lookup_table((IBusEngine *)rawcode);
+//	text =  ibus_text_new_from_string (rawcode->table->candidates->data);
+//	ibus_engine_update_auxiliray_text(rawcode, text, TRUE)  ;
 		g_object_unref (text);
+	
 		ibus_lookup_table_set_page_size (rawcode->table, rawcode->table->candidates->len);
 return rawcode->table->candidates->len;
 }
@@ -482,8 +501,10 @@ static void commit_buffer_to_ibus(IBusRawcodeEngine *rawcode)
   gunichar c;
    IBusText *text;
 	c = rawcode_get_unicode_value (rawcode->buffer);
-	text = ibus_text_new_from_unichar(c);
-	ibus_engine_commit_text ((IBusEngine *)rawcode, text);
+	if (c >0x0 && c < 0x10FFFF){		
+		text = ibus_text_new_from_unichar(c);
+		ibus_engine_commit_text ((IBusEngine *)rawcode, text);
+	}
 	g_string_assign (rawcode->buffer, "");
 	text = ibus_text_new_from_static_string ("");
 	ibus_engine_update_preedit_text ((IBusEngine *)rawcode, text, 0, FALSE);
