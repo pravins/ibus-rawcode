@@ -159,7 +159,7 @@ ibus_rawcode_engine_init (IBusRawcodeEngine *rawcode)
     rawcode->prop_list = ibus_prop_list_new ();
     ibus_prop_list_append (rawcode->prop_list,  rawcode->rawcode_mode_prop);
 
-    rawcode->table = ibus_lookup_table_new (16, 0, TRUE, FALSE);
+    rawcode->table = ibus_lookup_table_new (10, 0, TRUE, TRUE);
   rawcode->maxpreeditlen = 8;
 }
 
