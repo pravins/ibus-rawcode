@@ -3,7 +3,7 @@
 Name:       @PACKAGE_NAME@
 Version:    @PACKAGE_VERSION@
 Release:    1%{?dist}
-Summary:    The Hangul engine for IBus input platform
+Summary:    The Rawcode engine for IBus input platform
 License:    GPLv2+
 Group:      System Environment/Libraries
 URL:        http://code.google.com/p/ibus/
@@ -13,14 +13,12 @@ BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires:  gettext-devel
 BuildRequires:  libtool
-BuildRequires:  libhangul-devel
 BuildRequires:  pkgconfig
 
 Requires:   ibus
 
 %description
-The Hangul engine for IBus platform. It provides Korean input method from
-libhangul.
+The Rawcode engine for IBus platform.
 
 %prep
 %setup -q
@@ -43,10 +41,10 @@ rm -rf $RPM_BUILD_ROOT
 %files -f %{name}.lang
 %defattr(-,root,root,-)
 %doc AUTHORS COPYING README
-%{_libexecdir}/ibus-engine-hangul
+%{_libexecdir}/ibus-engine-rawcode
 %{_datadir}/@PACKAGE@
 %{_datadir}/ibus/component/*
 
 %changelog
-* Fri Aug 08 2008 Huang Peng <shawn.p.huang@gmail.com> - @VERSION@-1
+* Fri Feb 27 2009 Pravin Satpute <pravin.d.s@gmail.com> - @VERSION@-1
 - The first version.
