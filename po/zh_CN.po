@@ -17,9 +17,9 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: src/main.c:46
-msgid "Hangul input method"
+msgid "Rawcode input method"
 msgstr ""
 
 #: src/main.c:55 src/main.c:56
-msgid "Hangul Input Method"
+msgid "Rawcode Input Method"
 msgstr ""

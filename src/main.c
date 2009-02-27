@@ -55,8 +55,8 @@ start_component (void)
                                                      N_("Rawcode Input Method"),
                                                      "other",
                                                      "GPL",
-                                                     "Peng Huang <shawn.p.huang@gmail.com>",
-                                                     PKGDATADIR"/icon/ibus-hangul.svg",
+                                                     "Pravin Satpute <pravin.d.s@gmail.com>",
+                                                     PKGDATADIR"/icon/ibus-rawcode.png",
                                                      "us"));
 
     factory = ibus_factory_new (ibus_bus_get_connection (bus));

@@ -15,7 +15,6 @@ struct _IBusRawcodeEngine {
 
     /* members */
     GString *buffer;
-    gboolean rawcode_mode;
   int maxpreeditlen;
 
     IBusLookupTable *table;
@@ -59,8 +58,6 @@ static void ibus_rawcode_engine_page_up      (IBusEngine             *engine);
 static void ibus_rawcode_engine_page_down    (IBusEngine             *engine);
 static void ibus_rawcode_engine_cursor_up    (IBusEngine             *engine);
 static void ibus_rawcode_engine_cursor_down  (IBusEngine             *engine);
-static void ibus_rawcode_engine_toggle_rawcode_mode
-                                            (IBusRawcodeEngine       *rawcode);
 #if 0
 static void ibus_hangul_property_activate   (IBusEngine             *engine,
                                              const gchar            *prop_name,
@@ -144,7 +141,6 @@ ibus_rawcode_engine_class_init (IBusRawcodeEngineClass *klass)
 static void
 ibus_rawcode_engine_init (IBusRawcodeEngine *rawcode)
 {
-    rawcode->rawcode_mode = TRUE;
     rawcode->buffer = g_string_new ("");
     rawcode->rawcode_mode_prop = ibus_property_new ("rawcode_mode_prop",
                                            PROP_TYPE_NORMAL,
@@ -305,25 +301,6 @@ ibus_rawcode_engine_flush (IBusRawcodeEngine *rawcode)
     g_object_unref (text);
 }
 
-static void
-ibus_rawcode_engine_toggle_hangul_mode (IBusRawcodeEngine *rawcode)
-{
-    IBusText *text;
-    rawcode->rawcode_mode = ! rawcode->rawcode_mode;
-
-    ibus_rawcode_engine_flush (rawcode);
-
-    if (rawcode->rawcode_mode) {
-        text = ibus_text_new_from_static_string ("한");
-    }
-    else {
-        text = ibus_text_new_from_static_string ("A");
-    }
-
-    ibus_property_set_label (rawcode->rawcode_mode_prop, text);
-    ibus_engine_update_property ((IBusEngine *)rawcode, rawcode->rawcode_mode_prop);
-    g_object_unref (text);
-}
 
 static void
 ibus_rawcode_engine_focus_in (IBusEngine *engine)
