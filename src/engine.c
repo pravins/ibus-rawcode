@@ -452,6 +452,7 @@ IBusText *text;
         		text = ibus_text_new_from_unichar(c);			
 	        	ibus_lookup_table_append_candidate (rawcode->table, text);
 	        	ibus_engine_update_lookup_table ((IBusEngine *)rawcode, rawcode->table, TRUE);
+		g_object_unref (text);
 		}
 		g_string_truncate(rawcode->buffer, rawcode->buffer->len-1);
 
@@ -463,12 +464,13 @@ IBusText *text;
 	        	ibus_lookup_table_append_candidate (rawcode->table, text);
 	        	ibus_engine_update_lookup_table ((IBusEngine *)rawcode, rawcode->table, TRUE);
 	        	g_string_truncate(rawcode->buffer, rawcode->buffer->len-1);
+		g_object_unref (text);
 		}
 
 //	ibus_engine_hide_lookup_table((IBusEngine *)rawcode);
 //	text =  ibus_text_new_from_string (rawcode->table->candidates->data);
 //	ibus_engine_update_auxiliray_text((IBusEngine *)rawcode, text, TRUE)  ;
-		g_object_unref (text);
+
 	
 return rawcode->table->candidates->len;
 }
@@ -481,13 +483,17 @@ static void commit_buffer_to_ibus(IBusRawcodeEngine *rawcode)
 	if (c >0x0 && c < 0x10FFFF){		
 		text = ibus_text_new_from_unichar(c);
 		ibus_engine_commit_text ((IBusEngine *)rawcode, text);
+		g_object_unref (text);
 	}
+
 	g_string_assign (rawcode->buffer, "");
 	text = ibus_text_new_from_static_string ("");
 	ibus_engine_update_preedit_text ((IBusEngine *)rawcode, text, 0, FALSE);
+	g_object_unref (text);
+
 	if(rawcode->table){
 	        ibus_lookup_table_clear (rawcode->table);
 	        ibus_engine_hide_lookup_table((IBusEngine *)rawcode);
 	}
-        g_object_unref (text);
+
 }
