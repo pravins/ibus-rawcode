@@ -15,7 +15,7 @@ struct _IBusRawcodeEngine {
 
     /* members */
     GString *buffer;
-  int maxpreeditlen;
+    int maxpreeditlen;
 
     IBusLookupTable *table;
     IBusProperty    *rawcode_mode_prop;
@@ -154,9 +154,8 @@ ibus_rawcode_engine_init (IBusRawcodeEngine *rawcode)
 
     rawcode->prop_list = ibus_prop_list_new ();
     ibus_prop_list_append (rawcode->prop_list,  rawcode->rawcode_mode_prop);
-
     rawcode->table = ibus_lookup_table_new (10, 0, TRUE, TRUE);
-  rawcode->maxpreeditlen = 8;
+    rawcode->maxpreeditlen = 8;
 }
 
 static GObject*
@@ -204,7 +203,7 @@ static void
 ibus_rawcode_engine_update_preedit_text (IBusRawcodeEngine *rawcode)
 {
     IBusText *text;
-  const gchar *str;
+   const gchar *str;
     str= rawcode->buffer->str;
 
 		if (str != NULL) {
@@ -218,9 +217,9 @@ ibus_rawcode_engine_update_preedit_text (IBusRawcodeEngine *rawcode)
 		                      g_object_unref (text);
 		}
 	      else {
-		        text = ibus_text_new_from_static_string ("");
-		        ibus_engine_update_preedit_text ((IBusEngine *)rawcode, text, 0, FALSE);
-		        g_object_unref (text);
+			        text = ibus_text_new_from_static_string ("");
+			        ibus_engine_update_preedit_text ((IBusEngine *)rawcode, text, 0, FALSE);
+			        g_object_unref (text);
 		    } 
 }
 
@@ -230,7 +229,7 @@ ibus_rawcode_engine_process_key_event (IBusEngine     *engine,
                                       guint           modifiers)
 {
     IBusRawcodeEngine *rawcode = (IBusRawcodeEngine *) engine;
-  const gchar *keyval_name;
+   const gchar *keyval_name;
 
     if (modifiers & IBUS_RELEASE_MASK)
         return FALSE;
@@ -286,19 +285,12 @@ ibus_rawcode_engine_flush (IBusRawcodeEngine *rawcode)
 {
     IBusText *text;
 
-//    str = hangul_ic_flush (hangul->context);
-
-//    if (str == NULL || str[0] == 0)
-//        return;
-
-//    text = ibus_text_new_from_ucs4 (str);
 	text = ibus_text_new_from_static_string ("");
 	ibus_engine_update_preedit_text ((IBusEngine *)rawcode, text, 0, FALSE);
 
-//    ibus_engine_hide_preedit_text ((IBusEngine *) hangul);
-//    ibus_engine_commit_text ((IBusEngine *) hangul, text);
+//    ibus_engine_hide_preedit_text ((IBusEngine *) rawcode);
 
-    g_object_unref (text);
+	g_object_unref (text);
 }
 
 
@@ -382,8 +374,8 @@ ibus_rawcode_engine_process_preedit_text (IBusRawcodeEngine *rawcode)
 {
   int MAXLEN = 6;
 	if(rawcode->buffer->len==0){
-	ibus_engine_hide_preedit_text((IBusEngine *)rawcode);
-	ibus_engine_hide_lookup_table((IBusEngine *)rawcode);
+                ibus_engine_hide_preedit_text((IBusEngine *)rawcode);
+	        ibus_engine_hide_lookup_table((IBusEngine *)rawcode);
 	}
 
         if (rawcode->buffer->len > 0) {
@@ -396,8 +388,8 @@ ibus_rawcode_engine_process_preedit_text (IBusRawcodeEngine *rawcode)
         }
 
 	if((rawcode->buffer->len>=3) && (rawcode->buffer->len < MAXLEN)){
-	create_rawcode_lookup_table(rawcode);
-	}else if(rawcode->buffer->len==MAXLEN){
+        	create_rawcode_lookup_table(rawcode);
+	} else if(rawcode->buffer->len==MAXLEN){
 			commit_buffer_to_ibus(rawcode);
 		       	      }
 
@@ -457,9 +449,9 @@ IBusText *text;
 		g_string_append_c (rawcode->buffer, trail);		
 		c = rawcode_get_unicode_value (rawcode->buffer);
 		if (c >0x0 && c < 0x10FFFF){		
-		text = ibus_text_new_from_unichar(c);			
-		ibus_lookup_table_append_candidate (rawcode->table, text);
-		ibus_engine_update_lookup_table ((IBusEngine *)rawcode, rawcode->table, TRUE);
+        		text = ibus_text_new_from_unichar(c);			
+	        	ibus_lookup_table_append_candidate (rawcode->table, text);
+	        	ibus_engine_update_lookup_table ((IBusEngine *)rawcode, rawcode->table, TRUE);
 		}
 		g_string_truncate(rawcode->buffer, rawcode->buffer->len-1);
 
@@ -467,10 +459,10 @@ IBusText *text;
 		g_string_append_c (rawcode->buffer, "0");		
 		c = rawcode_get_unicode_value (rawcode->buffer);
 		if (c >0x0 && c < 0x10FFFF){		
-		text = ibus_text_new_from_unichar(c);			
-		ibus_lookup_table_append_candidate (rawcode->table, text);
-		ibus_engine_update_lookup_table ((IBusEngine *)rawcode, rawcode->table, TRUE);
-		g_string_truncate(rawcode->buffer, rawcode->buffer->len-1);
+	        	text = ibus_text_new_from_unichar(c);			
+	        	ibus_lookup_table_append_candidate (rawcode->table, text);
+	        	ibus_engine_update_lookup_table ((IBusEngine *)rawcode, rawcode->table, TRUE);
+	        	g_string_truncate(rawcode->buffer, rawcode->buffer->len-1);
 		}
 
 //	ibus_engine_hide_lookup_table((IBusEngine *)rawcode);
@@ -478,14 +470,13 @@ IBusText *text;
 //	ibus_engine_update_auxiliray_text((IBusEngine *)rawcode, text, TRUE)  ;
 		g_object_unref (text);
 	
-		ibus_lookup_table_set_page_size (rawcode->table, rawcode->table->candidates->len);
 return rawcode->table->candidates->len;
 }
 
 static void commit_buffer_to_ibus(IBusRawcodeEngine *rawcode)
 {
-  gunichar c;
-   IBusText *text;
+	gunichar c;
+	IBusText *text;
 	c = rawcode_get_unicode_value (rawcode->buffer);
 	if (c >0x0 && c < 0x10FFFF){		
 		text = ibus_text_new_from_unichar(c);
@@ -495,8 +486,8 @@ static void commit_buffer_to_ibus(IBusRawcodeEngine *rawcode)
 	text = ibus_text_new_from_static_string ("");
 	ibus_engine_update_preedit_text ((IBusEngine *)rawcode, text, 0, FALSE);
 	if(rawcode->table){
-	ibus_lookup_table_clear (rawcode->table);
-	ibus_engine_hide_lookup_table((IBusEngine *)rawcode);
+	        ibus_lookup_table_clear (rawcode->table);
+	        ibus_engine_hide_lookup_table((IBusEngine *)rawcode);
 	}
-   g_object_unref (text);
+        g_object_unref (text);
 }
