@@ -452,7 +452,7 @@ IBusText *text;
         		text = ibus_text_new_from_unichar(c);			
 	        	ibus_lookup_table_append_candidate (rawcode->table, text);
 	        	ibus_engine_update_lookup_table ((IBusEngine *)rawcode, rawcode->table, TRUE);
-		g_object_unref (text);
+		        g_object_unref (text);
 		}
 		g_string_truncate(rawcode->buffer, rawcode->buffer->len-1);
 
@@ -463,9 +463,9 @@ IBusText *text;
 	        	text = ibus_text_new_from_unichar(c);			
 	        	ibus_lookup_table_append_candidate (rawcode->table, text);
 	        	ibus_engine_update_lookup_table ((IBusEngine *)rawcode, rawcode->table, TRUE);
-	        	g_string_truncate(rawcode->buffer, rawcode->buffer->len-1);
-		g_object_unref (text);
+	        	g_object_unref (text);
 		}
+	        	g_string_truncate(rawcode->buffer, rawcode->buffer->len-1);
 
 //	ibus_engine_hide_lookup_table((IBusEngine *)rawcode);
 //	text =  ibus_text_new_from_string (rawcode->table->candidates->data);
