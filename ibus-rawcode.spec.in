@@ -1,8 +1,6 @@
-%{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
-%define mod_path ibus-@PACKAGE_VERSION_MAJOR@.@PACKAGE_VERSION_MINOR@
 Name:       @PACKAGE_NAME@
 Version:    @PACKAGE_VERSION@
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    The Rawcode engine for IBus input platform
 License:    GPLv2+
 Group:      System Environment/Libraries
@@ -14,6 +12,7 @@ BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:  gettext-devel
 BuildRequires:  libtool
 BuildRequires:  pkgconfig
+BuildRequires:  ibus-devel
 
 Requires:   ibus
 
@@ -31,7 +30,7 @@ make %{?_smp_mflags}
 %install
 rm -rf $RPM_BUILD_ROOT
 make DESTDIR=${RPM_BUILD_ROOT} install
-rm -f $RPM_BUILD_ROOT%{python_sitearch}/_hangul.la
+rm -f $RPM_BUILD_ROOT%{python_sitearch}/_rawcode.la
 
 %find_lang %{name}
 
@@ -46,5 +45,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/ibus/component/*
 
 %changelog
+* Tue Mar 03 2009 Pravin Satpute <pravin.d.s@gmail.com> - @VERSION@-2
+- removed mod_path
+- added build requires ibus-devel
+
 * Tue Mar 03 2009 Pravin Satpute <pravin.d.s@gmail.com> - @VERSION@-1
 - The first version.
