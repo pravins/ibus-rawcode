@@ -1,0 +1,13 @@
+How to use ibus-rawcode
+
+ibus-rawcode is very useful for developers, since they mostly work with codepoint instead of keyborad layout for testing characters
+Also it will be very useful in case user want a particular character and it is not available on any keyboard input layout, and you want to use that
+
+Just check for characters unicode value on http://www.unicode.org/charts/
+and type directly that code using ibus-rawcode
+
+example: U+0915 is code for क
+so if you want to input this character using ibus-rawcode directly type 0915 and you will get required output
+
+ibus-rawcode presently not supporting utf8 encoding but in next version we will support that
+also lookuptable now showing candidates from a to f, that is also planned for next versions. 
