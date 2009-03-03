@@ -46,5 +46,5 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/ibus/component/*
 
 %changelog
-* Fri Feb 27 2009 Pravin Satpute <pravin.d.s@gmail.com> - @VERSION@-1
+* Tue Mar 03 2009 Pravin Satpute <pravin.d.s@gmail.com> - @VERSION@-1
 - The first version.
