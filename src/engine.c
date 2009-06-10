@@ -154,7 +154,7 @@ ibus_rawcode_engine_init (IBusRawcodeEngine *rawcode)
 
     rawcode->prop_list = ibus_prop_list_new ();
     ibus_prop_list_append (rawcode->prop_list,  rawcode->rawcode_mode_prop);
-    rawcode->table = ibus_lookup_table_new (10, 0, TRUE, TRUE);
+    rawcode->table = ibus_lookup_table_new (16, 0, TRUE, TRUE);
     rawcode->maxpreeditlen = 8;
 }
 
@@ -466,6 +466,22 @@ IBusText *text;
 	        	g_object_unref (text);
 		}
 	        	g_string_truncate(rawcode->buffer, rawcode->buffer->len-1);
+
+	for (i=10; i<17; ++i) {
+		trail =(gchar) rawcode_hex_to_ascii (i);
+		g_string_append_c (rawcode->buffer, trail);		
+		c = rawcode_get_unicode_value (rawcode->buffer);
+		if (c >0x0 && c < 0x10FFFF){		
+        		text = ibus_text_new_from_unichar(c);			
+	        	ibus_lookup_table_append_candidate (rawcode->table, text);
+	        	ibus_engine_update_lookup_table ((IBusEngine *)rawcode, rawcode->table, TRUE);
+        		g_object_unref (text);
+		}
+		g_string_truncate(rawcode->buffer, rawcode->buffer->len-1);
+
+	}
+
+
 
 //	ibus_engine_hide_lookup_table((IBusEngine *)rawcode);
 //	text =  ibus_text_new_from_string (rawcode->table->candidates->data);
