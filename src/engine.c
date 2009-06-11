@@ -270,6 +270,47 @@ ibus_rawcode_engine_process_key_event (IBusEngine     *engine,
 	return TRUE;
     }
 
+  if(keyval==IBUS_Up) {
+	g_debug("print in up key");
+	if(rawcode->table) {
+//		g_debug("cursonr pos =  %d", rawcode->table->cursor_pos);	
+//		g_debug("candidates =  %d", rawcode->table->candidates->len);	
+		ibus_lookup_table_cursor_up(rawcode->table);
+		g_debug("after calling up function cursonr pos =  %d", rawcode->table->cursor_pos);	
+		return TRUE;
+	}
+  }  
+  
+
+  if(keyval==IBUS_Down) {
+
+	g_debug("pressed in down key");
+	if(rawcode->table) {
+		ibus_lookup_table_cursor_down(rawcode->table);
+		g_debug("cursonr pos =  %d", rawcode->table->cursor_pos);	
+		return TRUE;
+	}
+   }
+
+  if(keyval==IBUS_Return) {
+	if(rawcode->table) {
+	        IBusText *text;
+		text = ibus_lookup_table_get_candidate(rawcode->table, rawcode->table->cursor_pos);
+		ibus_engine_commit_text ((IBusEngine *)rawcode, text);
+	        ibus_lookup_table_clear (rawcode->table);
+	        ibus_engine_hide_lookup_table((IBusEngine *)rawcode);
+
+		g_string_assign (rawcode->buffer, "");
+		text = ibus_text_new_from_static_string ("");
+		ibus_engine_update_preedit_text ((IBusEngine *)rawcode, text, 0, FALSE);
+		g_object_unref (text);
+
+	       return TRUE;
+	}
+  }
+		
+
+
 
 
 // other keys will not allowed in preedit
@@ -436,6 +477,7 @@ int i;
 IBusText *text;
 	if(rawcode->table)
 		ibus_lookup_table_clear (rawcode->table);
+//		ibus_lookup_table_set_page_size(rawcode->table,10);
 // adding space key character in lookuptable
 /*		c = rawcode_get_unicode_value (rawcode->buffer);
 		if (c >0x0 && c < 0x10FFFF){
@@ -467,7 +509,7 @@ IBusText *text;
 		}
 	        	g_string_truncate(rawcode->buffer, rawcode->buffer->len-1);
 
-	for (i=10; i<17; ++i) {
+	for (i=10; i<=16; ++i) {
 		trail =(gchar) rawcode_hex_to_ascii (i);
 		g_string_append_c (rawcode->buffer, trail);		
 		c = rawcode_get_unicode_value (rawcode->buffer);
