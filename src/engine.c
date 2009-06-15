@@ -271,12 +271,9 @@ ibus_rawcode_engine_process_key_event (IBusEngine     *engine,
     }
 
   if(keyval==IBUS_Up) {
-	g_debug("print in up key");
 	if(rawcode->table) {
-//		g_debug("cursonr pos =  %d", rawcode->table->cursor_pos);	
-//		g_debug("candidates =  %d", rawcode->table->candidates->len);	
 		ibus_lookup_table_cursor_up(rawcode->table);
-		g_debug("after calling up function cursonr pos =  %d", rawcode->table->cursor_pos);	
+	        ibus_engine_update_lookup_table ((IBusEngine *)rawcode, rawcode->table, TRUE);
 		return TRUE;
 	}
   }  
@@ -287,7 +284,7 @@ ibus_rawcode_engine_process_key_event (IBusEngine     *engine,
 	g_debug("pressed in down key");
 	if(rawcode->table) {
 		ibus_lookup_table_cursor_down(rawcode->table);
-		g_debug("cursonr pos =  %d", rawcode->table->cursor_pos);	
+	        ibus_engine_update_lookup_table ((IBusEngine *)rawcode, rawcode->table, TRUE);
 		return TRUE;
 	}
    }
