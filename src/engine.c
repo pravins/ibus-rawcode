@@ -38,6 +38,7 @@ static gboolean
 			ibus_rawcode_engine_process_key_event
                                             (IBusEngine             *engine,
                                              guint               	 keyval,
+                                             guint               	 keycode,
                                              guint               	 modifiers);
 static void ibus_rawcode_engine_focus_in     (IBusEngine             *engine);
 static void ibus_rawcode_engine_focus_out    (IBusEngine             *engine);
@@ -226,6 +227,7 @@ ibus_rawcode_engine_update_preedit_text (IBusRawcodeEngine *rawcode)
 static gboolean
 ibus_rawcode_engine_process_key_event (IBusEngine     *engine,
                                       guint           keyval,
+                                      guint               	 keycode,
                                       guint           modifiers)
 {
     IBusRawcodeEngine *rawcode = (IBusRawcodeEngine *) engine;
@@ -272,6 +274,7 @@ ibus_rawcode_engine_process_key_event (IBusEngine     *engine,
 
   if(keyval==IBUS_Up) {
 	if(rawcode->table) {
+//                g_debug("print len %d", rawcode->table->len);
 		ibus_lookup_table_cursor_up(rawcode->table);
 	        ibus_engine_update_lookup_table ((IBusEngine *)rawcode, rawcode->table, TRUE);
 		return TRUE;
@@ -300,7 +303,7 @@ ibus_rawcode_engine_process_key_event (IBusEngine     *engine,
 		ibus_engine_update_preedit_text ((IBusEngine *)rawcode, text, 0, FALSE);
 		g_object_unref (text);
 
-	       return TRUE;
+	       return FALSE;
 	}
   }
 
