@@ -273,7 +273,7 @@ ibus_rawcode_engine_process_key_event (IBusEngine     *engine,
     }
 
   if(keyval==IBUS_Up) {
-	if(rawcode->table) {
+	if(rawcode->table->candidates->len != 0) {
 //                g_debug("print len %d", rawcode->table->len);
 		ibus_lookup_table_cursor_up(rawcode->table);
 	        ibus_engine_update_lookup_table ((IBusEngine *)rawcode, rawcode->table, TRUE);
@@ -283,7 +283,7 @@ ibus_rawcode_engine_process_key_event (IBusEngine     *engine,
   
 
   if(keyval==IBUS_Down) {
-	if(rawcode->table) {
+	if(rawcode->table->candidates->len != 0) {
 		ibus_lookup_table_cursor_down(rawcode->table);
 	        ibus_engine_update_lookup_table ((IBusEngine *)rawcode, rawcode->table, TRUE);
 		return TRUE;
@@ -291,7 +291,7 @@ ibus_rawcode_engine_process_key_event (IBusEngine     *engine,
    }
 
   if(keyval==IBUS_Return) {
-	if(rawcode->table) {
+	if(rawcode->table->candidates->len != 0) {
 	        IBusText *text;
 		text = ibus_lookup_table_get_candidate(rawcode->table, rawcode->table->cursor_pos);
 		ibus_engine_commit_text ((IBusEngine *)rawcode, text);
@@ -303,7 +303,7 @@ ibus_rawcode_engine_process_key_event (IBusEngine     *engine,
 		ibus_engine_update_preedit_text ((IBusEngine *)rawcode, text, 0, FALSE);
 		g_object_unref (text);
 
-	       return FALSE;
+	       return TRUE;
 	}
   }
 
