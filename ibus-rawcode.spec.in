@@ -1,11 +1,11 @@
 Name:       @PACKAGE_NAME@
 Version:    @PACKAGE_VERSION@
-Release:    2%{?dist}
+Release:    1%{?dist}
 Summary:    The Rawcode engine for IBus input platform
 License:    GPLv2+
 Group:      System Environment/Libraries
-URL:        http://github.com/pravins/ibus-rawcode/tree/master
-Source0:    http://pravins.fedorapeople.org/ibus-rawcode/%{name}-%{version}.tar.gz
+URL:        https://fedorahosted.org/ibus-rawcode/
+Source0:    https://fedorahosted.org/releases/i/b/ibus-rawcode/%{name}-%{version}.tar.gz
 
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -45,6 +45,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/ibus/component/*
 
 %changelog
+* Mon Feb 08 2010 Pravin Satpute <pravin.d.s@gmail.com> - @VERSION@-1
+- updated patches for code enhancements from phuang for ibus-1.2.99
+
 * Tue Mar 03 2009 Pravin Satpute <pravin.d.s@gmail.com> - @VERSION@-2
 - removed mod_path
 - added build requires ibus-devel

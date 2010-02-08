@@ -39,27 +39,11 @@ start_component (void)
     ibus_init ();
 
     bus = ibus_bus_new ();
+    g_object_ref_sink (bus);
     g_signal_connect (bus, "disconnected", G_CALLBACK (ibus_disconnected_cb), NULL);
 
-    component = ibus_component_new ("org.freedesktop.IBus.Rawcode",
-                                    N_("Rawcode input method"),
-                                    "0.1.0",
-                                    "GPL",
-                                    "Peng Huang <shawn.p.huang@gmail.com>",
-                                    "http://code.google.com/p/ibus/",
-                                    "",
-                                    "ibus-rawcode");
-    ibus_component_add_engine (component,
-                               ibus_engine_desc_new ("rawcode",
-                                                     N_("Rawcode Input Method"),
-                                                     N_("Rawcode Input Method"),
-                                                     "other",
-                                                     "GPL",
-                                                     "Pravin Satpute <pravin.d.s@gmail.com>",
-                                                     PKGDATADIR"/icon/ibus-rawcode.png",
-                                                     "us"));
-
     factory = ibus_factory_new (ibus_bus_get_connection (bus));
+    g_object_ref_sink (factory);
 
     ibus_factory_add_engine (factory, "rawcode", IBUS_TYPE_RAWCODE_ENGINE);
 
@@ -67,10 +51,25 @@ start_component (void)
         ibus_bus_request_name (bus, "org.freedesktop.IBus.Rawcode", 0);
     }
     else {
+        component = ibus_component_new ("org.freedesktop.IBus.Rawcode",
+                                        N_("Rawcode input method"),
+                                        "0.1.0",
+                                        "GPL",
+                                        "Pravin Satpute <pravin.d.s@gmail.com>",
+                                        "https://fedorahosted.org/ibus-rawcode/",
+                                        "",
+                                        "ibus-rawcode");
+        ibus_component_add_engine (component,
+                                   ibus_engine_desc_new ("rawcode",
+                                                         N_("Rawcode Input Method"),
+                                                         N_("Rawcode Input Method"),
+                                                         "other",
+                                                         "GPL",
+                                                         "Pravin Satpute <pravin.d.s@gmail.com>",
+                                                         PKGDATADIR"/icon/ibus-rawcode.png",
+                                                         "us"));
         ibus_bus_register_component (bus, component);
     }
-
-    g_object_unref (component);
 
     ibus_main ();
 }
