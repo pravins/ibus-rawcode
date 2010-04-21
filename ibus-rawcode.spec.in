@@ -45,6 +45,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/ibus/component/*
 
 %changelog
+* Wed Apr 21 2010 Pravin Satpute <pravin.d.s@gmail.com> - @VERSION@-1
+- fixed modifiers bug 584233
+- fixed ibus crash for invalid unicode character bugs 584240
+- fixed candidate lookup bug
+
 * Mon Feb 08 2010 Pravin Satpute <pravin.d.s@gmail.com> - @VERSION@-1
 - updated patches for code enhancements from phuang for ibus-1.2.99
 
